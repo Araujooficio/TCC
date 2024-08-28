@@ -1,0 +1,349 @@
+<!DOCTYPE html><html lang="pt"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' 'unsafe-inline' https://fonts.gstatic.com; img-src 'self' data: blob: https://pfst.cf2.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com; media-src 'self' data: blob: https://pfst.cf2.poecdn.net https://i.imgur.com https://wikimedia.org; frame-src 'self' https://www.youtube.com; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Avançado de Gestão de Assentamentos Informais</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        #map { height: 500px; }
+        .chart-container { height: 300px; }
+        .data-card { height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">SGAI</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="#dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#data-management">Gestão de Dados</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#analysis">Análise</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#planning">Planejamento</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#insights">Insights</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <section id="dashboard">
+            <h2>Dashboard</h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <div id="map"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Estatísticas Gerais</h5>
+                            <p>Total de Assentamentos: <span id="total-settlements">0</span></p>
+                            <p>População Total: <span id="total-population">0</span></p>
+                            <p>Área Total (km²): <span id="total-area">0</span></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Cobertura de Serviços</h5>
+                            <canvas id="services-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="data-management" class="mt-4">
+            <h2>Gestão de Dados</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Upload de Dados</h5>
+                            <form id="data-upload-form">
+                                <div class="mb-3">
+                                    <label for="file-upload" class="form-label">Arquivo:</label>
+                                    <input type="file" class="form-control" id="file-upload" accept=".csv, .xlsx, .geojson">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="data-type" class="form-label">Tipo de Dados:</label>
+                                    <select class="form-select" id="data-type">
+                                        <option value="demographics">Demografia</option>
+                                        <option value="infrastructure">Infraestrutura</option>
+                                        <option value="services">Serviços</option>
+                                        <option value="socioeconomic">Socioeconômico</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Enviar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Dados Recentes</h5>
+                            <div id="recent-data" class="data-card">
+                                <!-- Dados recentes serão inseridos aqui dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="analysis" class="mt-4">
+            <h2>Análise de Dados</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Análise Demográfica</h5>
+                            <canvas id="demographic-chart" class="chart-container"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Análise de Infraestrutura</h5>
+                            <canvas id="infrastructure-chart" class="chart-container"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="planning" class="mt-4">
+            <h2>Planejamento de Intervenções</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Simulação de Intervenção</h5>
+                            <form id="intervention-form">
+                                <div class="mb-3">
+                                    <label for="intervention-type" class="form-label">Tipo de Intervenção:</label>
+                                    <select class="form-select" id="intervention-type">
+                                        <option value="relocation">Realocação</option>
+                                        <option value="infrastructure">Melhoria de Infraestrutura</option>
+                                        <option value="services">Expansão de Serviços</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="intervention-area" class="form-label">Área de Intervenção:</label>
+                                    <select class="form-select" id="intervention-area">
+                                        <!-- Opções serão preenchidas dinamicamente -->
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="intervention-budget" class="form-label">Orçamento (MZN):</label>
+                                    <input type="number" class="form-control" id="intervention-budget">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Simular</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Resultados da Simulação</h5>
+                            <div id="simulation-results">
+                                <!-- Resultados da simulação serão inseridos aqui -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="insights" class="mt-4">
+            <h2>Insights e Recomendações</h2>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Insights Gerados por IA</h5>
+                    <div id="ai-insights">
+                        <!-- Insights gerados por IA serão inseridos aqui -->
+                    </div>
+                    <button id="generate-insights" class="btn btn-primary mt-3">Gerar Novos Insights</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Dados simulados
+        let settlements = [
+            { id: 1, name: "Assentamento A", population: 5000, area: 2.5, lat: -25.9664, lng: 32.5713 },
+            { id: 2, name: "Assentamento B", population: 7500, area: 3.2, lat: -25.9714, lng: 32.5673 },
+            { id: 3, name: "Assentamento C", population: 3200, area: 1.8, lat: -25.9734, lng: 32.5793 }
+        ];
+
+        // Inicialização do mapa
+        let map = L.map('map').setView([-25.9692, 32.5732], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        settlements.forEach(settlement => {
+            L.marker([settlement.lat, settlement.lng])
+             .bindPopup(`<b>${settlement.name}</b><br>População: ${settlement.population}<br>Área: ${settlement.area} km²`)
+             .addTo(map);
+        });
+
+        // Atualização de estatísticas
+        function updateStats() {
+            document.getElementById('total-settlements').textContent = settlements.length;
+            document.getElementById('total-population').textContent = settlements.reduce((sum, s) => sum + s.population, 0);
+            document.getElementById('total-area').textContent = settlements.reduce((sum, s) => sum + s.area, 0).toFixed(2);
+        }
+
+        // Gráfico de cobertura de serviços
+        let servicesChart = new Chart(document.getElementById('services-chart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Água', 'Eletricidade', 'Saneamento'],
+                datasets: [{
+                    data: [65, 78, 42],
+                    backgroundColor: ['#36a2eb', '#ffcd56', '#ff6384']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cobertura de Serviços (%)'
+                    }
+                }
+            }
+        });
+
+        // Simulação de upload de dados
+        document.getElementById('data-upload-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const file = document.getElementById('file-upload').files[0];
+            const dataType = document.getElementById('data-type').value;
+            console.log(`Simulando upload de ${file.name} do tipo ${dataType}`);
+            
+            // Simulando dados recebidos
+            const recentDataDiv = document.getElementById('recent-data');
+            recentDataDiv.innerHTML += `<p>${new Date().toLocaleString()}: Recebido ${file.name} (${dataType})</p>`;
+            
+            alert('Dados enviados com sucesso!');
+            updateStats();
+        });
+
+        // Gráficos de análise
+        let demographicChart = new Chart(document.getElementById('demographic-chart'), {
+            type: 'bar',
+            data: {
+                labels: settlements.map(s => s.name),
+                datasets: [{
+                    label: 'População',
+                    data: settlements.map(s => s.population),
+                    backgroundColor: '#36a2eb'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Distribuição Populacional por Assentamento'
+                    }
+                }
+            }
+        });
+
+        let infrastructureChart = new Chart(document.getElementById('infrastructure-chart'), {
+            type: 'radar',
+            data: {
+                labels: ['Água', 'Eletricidade', 'Saneamento', 'Estradas', 'Escolas', 'Saúde'],
+                datasets: [{
+                    label: 'Cobertura (%)',
+                    data: [65, 78, 42, 58, 70, 53],
+                    fill: true,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgb(54, 162, 235)',
+                    pointBackgroundColor: 'rgb(54, 162, 235)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(54, 162, 235)'
+                }]
+            },
+            options: {
+                elements: {
+                    line: {
+                        borderWidth: 3
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Cobertura de Infraestrutura'
+                    }
+                }
+            }
+        });
+
+        // Simulação de intervenção
+        document.getElementById('intervention-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const interventionType = document.getElementById('intervention-type').value;
+            const interventionArea = document.getElementById('intervention-area').value;
+            const budget = document.getElementById('intervention-budget').value;
+
+            // Simulando resultados
+            const results = {
+                impactoPopulacao: Math.floor(Math.random() * 1000) + 500,
+                melhoriaInfraestrutura: Math.floor(Math.random() * 30) + 10,
+                custoEstimado: Math.floor(budget * 0.9)
+            };
+
+            document.getElementById('simulation-results').innerHTML = `
+                <p><strong>Impacto na População:</strong> ${results.impactoPopulacao} pessoas beneficiadas</p>
+                <p><strong>Melhoria na Infraestrutura:</strong> ${results.melhoriaInfraestrutura}%</p>
+                <p><strong>Custo Estimado:</strong> ${results.custoEstimado} MZN</p>
+            `;
+        });
+
+        // Geração de insights por IA
+        document.getElementById('generate-insights').addEventListener('click', function() {
+            const insights = [
+                "Os assentamentos A e C mostram um crescimento populacional 20% acima da média nos últimos 6 meses.",
+                "A expansão da rede de água no Assentamento B pode beneficiar 3000 residentes a um custo estimado de 1.5 milhões de MZN.",
+                "Implementar um programa de microcrédito no Assentamento A pode estimular o empreendedorismo local e reduzir o desemprego em até 15%.",
+                "A construção de uma escola no Assentamento C pode aumentar a taxa de alfabetização em 25% em 5 anos."
+            ];
+
+            const insightsDiv = document.getElementById('ai-insights');
+            insightsDiv.innerHTML = '<ul>' + insights.map(insight => `<li>${insight}</li>`).join('') + '</ul>';
+        });
+
+        // Inicialização
+        updateStats();
+
+        // Preenchendo opções de área de intervenção
+        const interventionAreaSelect = document.getElementById('intervention-area');
+        settlements.forEach(settlement => {
+            const option = document.createElement('option');
+            option.value = settlement.id;
+            option.textContent = settlement.name;
+            interventionAreaSelect.appendChild(option);
+        });
+    </script>
+
+
+</body></html>
